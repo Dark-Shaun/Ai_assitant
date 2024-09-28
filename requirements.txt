@@ -1,0 +1,4 @@
+Django==3.2.10
+torch==1.13.1
+transformers==4.30.0
+python-dotenv==0.19.2

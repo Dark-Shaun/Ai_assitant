@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Code Assistant</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/themes/prism.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/themes/prism-okaidia.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/prism.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-java.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-csharp.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --text-color: #333333;
+            --chat-bg: #ffffff;
+            --user-msg-bg: #e3f2fd;
+            --bot-msg-bg: #f1f8e9;
+            --input-bg: #ffffff;
+            --button-bg: #1976d2;
+            --button-text: #ffffff;
+            --border-color: #e0e0e0;
+        }
+        .dark-mode {
+            --bg-color: #1a1a1a;
+            --text-color: #ffffff;
+            --chat-bg: #2c2c2c;
+            --user-msg-bg: #0d47a1;
+            --bot-msg-bg: #1b5e20;
+            --input-bg: #424242;
+            --button-bg: #2196f3;
+            --button-text: #ffffff;
+            --border-color: #424242;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #app {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--chat-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+        .chat-header {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            padding: 15px 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-container {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            max-width: 80%;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 18px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: var(--user-msg-bg);
+            color: var(--text-color);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .bot-message {
+            background-color: var(--bot-msg-bg);
+            color: var(--text-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background-color: var(--chat-bg);
+            border-top: 1px solid var(--border-color);
+        }
+        #user-input {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1em;
+            transition: all 0.3s ease;
+            resize: vertical;
+            min-height: 50px;
+            max-height: 200px;
+        }
+        #user-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--button-bg);
+        }
+        #send-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 24px;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            margin-top: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            align-self: flex-end;
+        }
+        #send-button:hover {
+            background-color: #1565c0;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .code-block {
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .dark-mode .code-block {
+            background-color: #2d2d2d;
+        }
+        .code-input {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-top: 10px;
+        }
+        .dark-mode .code-input {
+            background-color: #2d2d2d;
+            border-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="chat-header">
+            <span>AI Assistant - Your Versatile Helper</span>
+            <label class="toggle-switch">
+                <input type="checkbox" v-model="darkMode">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="chat-container" ref="chatContainer">
+            <div v-for="message in messages" :key="message.id" :class="['message', message.type + '-message']">
+                <div v-html="formatMessage(message.content)"></div>
+            </div>
+        </div>
+        <div class="input-container">
+            <textarea id="user-input" 
+                      v-model="userInput" 
+                      @keydown.enter.exact.prevent="newLine"
+                      @keydown.enter.shift.exact.prevent="newLine"
+                      @keyup.enter.exact="sendMessage"
+                      placeholder="Type your message or paste code here..." 
+                      rows="3"></textarea>
+            <div v-if="isCodeInput" class="code-input" v-text="userInput"></div>
+            <button id="send-button" @click="sendMessage">Send</button>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                messages: [],
+                userInput: '',
+                darkMode: false,
+                isCodeInput: false
+            },
+            watch: {
+                darkMode(newVal) {
+                    if (newVal) {
+                        document.body.classList.add('dark-mode');
+                    } else {
+                        document.body.classList.remove('dark-mode');
+                    }
+                },
+                messages: {
+                    handler() {
+                        this.$nextTick(() => {
+                            this.scrollToBottom();
+                        });
+                    },
+                    deep: true
+                },
+                userInput(newVal) {
+                    this.isCodeInput = this.detectCodeInput(newVal);
+                }
+            },
+            methods: {
+                sendMessage() {
+                    if (this.userInput.trim() === '') return;
+
+                    let messageContent = this.userInput;
+                    if (this.isCodeInput) {
+                        messageContent = '```\n' + messageContent + '\n```';
+                    }
+
+                    this.messages.push({
+                        id: Date.now(),
+                        content: messageContent,
+                        type: 'user'
+                    });
+
+                    axios.post('/chat/api/', { message: messageContent })
+                        .then(response => {
+                            this.messages.push({
+                                id: Date.now(),
+                                content: response.data.response,
+                                type: 'bot'
+                            });
+                            this.$nextTick(() => {
+                                Prism.highlightAll();
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+
+                    this.userInput = '';
+                    this.isCodeInput = false;
+                },
+                formatMessage(content) {
+                    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+                    let formattedContent = content.replace(codeBlockRegex, (match, language, code) => {
+                        language = language || 'plaintext';
+                        const highlightedCode = Prism.highlight(code, Prism.languages[language], language);
+                        return `<div class="code-block"><pre><code class="language-${language}">${highlightedCode}</code></pre></div>`;
+                    });
+                    return formattedContent.replace(/\n/g, '<br>');
+                },
+                scrollToBottom() {
+                    const container = this.$refs.chatContainer;
+                    container.scrollTop = container.scrollHeight;
+                },
+                newLine(event) {
+                    this.userInput += '\n';
+                },
+                detectCodeInput(input) {
+                    const codePatterns = [
+                        /^(const|let|var|function|class|if|for|while)/m,
+                        /^def\s+\w+\s*\(/m,
+                        /^import\s+/m,
+                        /^#include/m,
+                        /^public\s+class/m
+                    ];
+                    return codePatterns.some(pattern => pattern.test(input));
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -20,7 +20,7 @@ This project is an AI-powered chatbot built with Django and the Hugging Face Tra
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/ai-assistant-chatbot.git
+   git clone git_url
    cd ai-assistant-chatbot
    ```
 

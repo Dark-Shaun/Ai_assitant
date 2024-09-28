@@ -1,6 +1,6 @@
 # AI Assistant Chatbot
 
-This project is an AI-powered chatbot built with Django and the Hugging Face Transformers library. It uses the BlenderBot model to generate responses to user queries.
+This project is an AI-powered chatbot built with Django and the Hugging Face Transformers library. It uses the BlenderBot model to generate weird responses to user queries.
 
 ## Features
 
